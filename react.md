@@ -1,197 +1,201 @@
-# React Interview Questions & Answers (Simple Explanation)
-
-This document provides simple, clear answers to commonly asked React interview questions with small examples and benefits explained.
 
 ---
 
-## 1. What is React?
-React is a JavaScript library for building user interfaces, mainly used for single-page applications.
+## 1. How to reset state in Redux?
 
-### ✅ Advantages
-- Reusable Components
-- Virtual DOM improves performance
-- Unidirectional Data Flow
-- Strong ecosystem
+You can reset state by listening to a specific action in your root reducer.
 
-### ❌ Disadvantages
-- Learning curve (JSX, hooks, etc.)
-- Fast updates can be overwhelming
-- Requires third-party libraries
+### Example:
+```js
+const appReducer = combineReducers({
+  user: userReducer,
+  posts: postReducer
+});
 
----
-
-## 2. Props and State in React
-- **Props** are read-only and passed from parent to child.
-- **State** is local and can be changed inside the component.
-
-```jsx
-function Welcome(props) {
-  return <h1>Hello, {props.name}</h1>;
-}
-```
-
-```jsx
-function Counter() {
-  const [count, setCount] = useState(0);
-  return <button onClick={() => setCount(count + 1)}>Clicked {count} times</button>;
-}
-```
-
----
-
-## 3. What is a Hook in React?
-Hooks let you use state and lifecycle in function components.
-
-### 🔹 Common Hooks
-- useState, useEffect, useRef, useContext
-
-### 🎯 Benefits
-- Reuse logic
-- Cleaner code
-
-### 🧩 Custom Hook Example
-```jsx
-function useCounter(initialValue = 0) {
-  const [count, setCount] = useState(initialValue);
-  const increment = () => setCount(c => c + 1);
-  return [count, increment];
-}
-```
-
-Rules:
-- Start with `use`
-- Call only at the top level
-
----
-
-## 4. What are Pure Components?
-Only re-render when props/state change.
-
-```jsx
-class MyComponent extends React.PureComponent {
-  render() {
-    return <div>{this.props.name}</div>;
+const rootReducer = (state, action) => {
+  if (action.type === 'RESET') {
+    state = undefined;
   }
+  return appReducer(state, action);
+};
+```
+
+Dispatch `dispatch({ type: 'RESET' })` to reset entire state.
+
+---
+
+## 2. React Context vs React Redux
+
+| Feature         | React Context            | Redux                     |
+|------------------|---------------------------|-----------------------------|
+| Purpose          | Prop drilling solution    | State management            |
+| Performance      | Rerenders all consumers   | Optimized with selectors    |
+| Middleware       | Not supported             | Supports thunk, saga, etc.  |
+| Tools            | Simple, minimal setup     | Advanced debugging tools    |
+
+✅ Use Context for simple data, Redux for complex logic.
+
+---
+
+## 3. Proper Way to Access Redux Store
+
+Use `useSelector` and `useDispatch` from `react-redux`.
+
+```jsx
+const count = useSelector(state => state.counter);
+const dispatch = useDispatch();
+dispatch({ type: 'INCREMENT' });
+```
+
+---
+
+## 4. What is Redux Thunk?
+
+Middleware that allows action creators to return a function instead of an object.
+
+### Example:
+```js
+const fetchData = () => (dispatch) => {
+  dispatch({ type: "LOADING" });
+  fetch('/api/data')
+    .then(res => res.json())
+    .then(data => dispatch({ type: "SUCCESS", payload: data }));
+};
+```
+
+✅ **Benefits:** Handles async logic inside actions.
+
+---
+
+## 5. What is Redux Saga?
+
+Saga uses generator functions to handle side effects.
+
+### Example:
+```js
+function* fetchUser() {
+  const data = yield call(api.getUser);
+  yield put({ type: "SET_USER", payload: data });
 }
 ```
 
+✅ **Why Saga?**
+- Easier to test
+- Handles complex async flows
+
 ---
 
-## 5. What are Synthetic Events?
-React's wrapper around browser events for consistency.
+## 6. Redux Saga vs Redux Thunk
 
-```jsx
-<button onClick={(e) => alert(e.type)}>Click me</button>
+| Feature       | Thunk                  | Saga                         |
+|---------------|------------------------|-------------------------------|
+| Syntax        | Functions              | Generator functions           |
+| Readability   | Simple async calls     | Better for complex flows      |
+| Testing       | Harder to test         | Easier to test (step by step) |
+
+---
+
+## 7. What is Redux DevTools?
+
+Browser extension to inspect Redux actions and state.
+
+✅ **Features**:
+- Time travel debugging
+- Action logger
+- State inspection
+- Undo/Redo
+
+### Setup:
+```js
+const store = createStore(reducer, window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__());
 ```
 
 ---
 
-## 6. What is the Virtual DOM?
-A virtual copy of the real DOM. React uses it for efficient updates.
+## 8. React vs React Native
 
-### 🔁 How it works
-1. Renders to Virtual DOM.
-2. Compares (diffs) with old.
-3. Updates only changed parts.
-
----
-
-## 7. Virtual DOM vs Shadow DOM
-
-| Feature         | Virtual DOM         | Shadow DOM                      |
-|----------------|---------------------|---------------------------------|
-| Used by        | React               | Web Components                  |
-| Purpose        | Performance         | Style encapsulation             |
-| Scope          | Whole App UI        | One Component                   |
+| Feature         | React               | React Native               |
+|------------------|----------------------|------------------------------|
+| Platform         | Web (HTML, DOM)     | Mobile (iOS, Android)        |
+| Render Targets   | Browser DOM         | Native components            |
+| Styling          | CSS                 | Stylesheets in JS            |
 
 ---
 
-## 8. Controlled vs Uncontrolled Components
+## 9. What is React.memo?
 
-- **Controlled**: React manages the form input.
+HOC that prevents re-render if props haven't changed.
+
+### Example:
 ```jsx
-<input value={name} onChange={(e) => setName(e.target.value)} />
-```
-- **Uncontrolled**: DOM manages input.
-```jsx
-<input ref={inputRef} />
+const MyComponent = React.memo(({ name }) => <div>{name}</div>);
 ```
 
+✅ **Benefits:** Improves performance by avoiding unnecessary renders.
+
 ---
 
-## 9. What is Lifting State Up?
-Move shared state to a common parent.
+## 10. Prevent Unnecessary Updates using setState
 
-```jsx
-function Parent() {
-  const [value, setValue] = useState('');
-  return <>
-    <ChildA value={value} />
-    <ChildB onChange={setValue} />
-  </>;
+```js
+if (this.state.count !== newCount) {
+  this.setState({ count: newCount });
 }
 ```
 
+✅ Use `shouldComponentUpdate` or `React.memo` in functional components.
+
 ---
 
-## 10. What are Higher-Order Components?
-A function that returns a new component with added features.
+## 11. What are Default Props?
+
+Default values for props if none passed.
 
 ```jsx
-function withLogger(Component) {
-  return function Wrapped(props) {
-    console.log('Props:', props);
-    return <Component {...props} />;
-  };
-}
+MyComponent.defaultProps = {
+  name: 'Guest'
+};
 ```
 
 ---
 
-## 11. What is the children prop?
-Special prop to pass nested elements.
+## 12. Different Design Patterns in React
+
+- Container/Presentational
+- Higher-Order Components (HOC)
+- Render Props
+- Hooks pattern
+- Compound components
+
+---
+
+## 13. PropTypes in React
+
+Used to validate props in development.
 
 ```jsx
-function Wrapper({ children }) {
-  return <div>{children}</div>;
-}
-
-<Wrapper><p>Hello inside!</p></Wrapper>
+MyComponent.propTypes = {
+  name: PropTypes.string.isRequired,
+  age: PropTypes.number
+};
 ```
 
 ---
 
-## 12. What is Reconciliation?
-React compares virtual DOM trees and updates the real DOM efficiently.
+## 14. Hooks You’ve Used
+
+- `useState`, `useEffect`, `useRef`, `useContext`
+- `useReducer`, `useMemo`, `useCallback`
+- Custom Hooks
 
 ---
 
-## 13. Stateless vs Stateful Components
+## 15. createElement vs cloneElement
 
-- Stateless: No state, just UI.
-```jsx
-function Greeting({ name }) {
-  return <h1>Hello {name}</h1>;
-}
-```
-- Stateful: Manages internal state.
-```jsx
-function Counter() {
-  const [count, setCount] = useState(0);
-  return <p>{count}</p>;
-}
-```
-
----
-
-## 14. What are Fragments?
-Used to group elements without extra nodes.
-
-```jsx
-<>
-  <h1>Title</h1>
-  <p>Text</p>
-</>
-```
+| Feature             | createElement                       | cloneElement                        |
+|---------------------|-------------------------------------|-------------------------------------|
+| Purpose             | Create a new element                | Clone an existing element           |
+| Syntax              | `React.createElement('div')`        | `React.cloneElement(element)`       |
+| Use Case            | Building JSX from scratch           | Modify props of an existing child   |
 
 ---
